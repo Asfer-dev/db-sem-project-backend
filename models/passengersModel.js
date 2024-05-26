@@ -13,6 +13,11 @@ const passengersSchema = mongoose.Schema(
         contact_no: {
             type: String,
             required: [true]
+        },
+        gender: {
+            type: String,
+            required: [true],
+            maxlength: 1
         }
     },
     {
@@ -21,5 +26,3 @@ const passengersSchema = mongoose.Schema(
 )
 
 export const passengers = mongoose.model('passengers', passengersSchema);
-
-// module.exports = passengers
