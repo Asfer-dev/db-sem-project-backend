@@ -1,8 +1,11 @@
 import express from 'express'
 import mongoose from 'mongoose'
-import { passengers } from './models/passengersModel.js'
+import { users } from './models/usersModel.js'
 import { terminals } from './models/terminalsModel.js'
+import { credentials } from './models/credentialsModel.js'
+import { routes } from './models/routesModel.js'
 import { configDotenv } from 'dotenv'
+//const bcrypt = require('bcrypt')
 
 configDotenv();
 
@@ -13,6 +16,34 @@ app.use(express.urlencoded({ extended: false }))
 
 app.get('/', (req, res) => {
     res.send('Hello Bus Management muthafuckas!')
+})
+
+//Signing up new user
+app.post('/signup', async (req, res) => {
+    try {
+        const User = await users.create({ cnic: req.body.cnic, name: req.body.name, contact_no: req.body.contact_no, gender: req.body.gender });
+        const Credential = await credentials.create({ email: req.body.email, password: req.body.password, user: User });
+        res.status(200).json(Credential)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
+})
+
+// Loging in user
+app.get('/login', async (req, res) => {
+    try {
+        const Credential = await credentials.findOne({ email: req.body.email })
+        if (Credential == null) {
+            return res.status(400).send("Cannot find this user!!!")
+        }
+        const matching = Credential.password === req.body.password
+        if (!matching) {
+            return res.status(400).send("Cannot match credentials!!!")
+        }
+        return res.status(500).json(Credential)
+    } catch (error) {
+        res.status(500).json({ message: error.message })
+    }
 })
 
 //Setting up /terminals route
@@ -70,67 +101,6 @@ app.delete('/terminals/:id', async (req, res) => {
             return res.status(404).json({ message: 'Cannot find this terminal with ID ${id}' })
         }
         res.status(200).json(Terminal)
-    } catch (error) {
-        res.status(500).json({ message: error.message })
-    }
-})
-
-//Setting up /passengers route
-//Get for passengers
-app.get('/passengers', async (req, res) => {
-    try {
-        const Passengers = await passengers.find({});
-        res.status(200).json(Passengers);
-    } catch (error) {
-        res.status(500).json({ message: error.message })
-    }
-})
-
-app.get('/passengers/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const Passenger = await passengers.findById(id);
-        res.status(200).json(Passenger);
-    } catch (error) {
-        res.status(500).json({ message: error.message })
-    }
-})
-
-//Post for passengers
-app.post('/passengers', async (req, res) => {
-    try {
-        const Passenger = await passengers.create(req.body)
-        res.status(200).json(Passenger)
-    } catch (error) {
-        console.log(error.message)
-        res.status(500).json({ message: error.message })
-    }
-})
-
-//Put for passengers
-app.put('/passengers/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const Passenger = await passengers.findByIdAndUpdate(id, req.body);
-        if (!Passenger) {
-            return res.status(404).json({ message: 'Cannot find this passenger with ID ${id}' })
-        }
-        const UpdatedPassenger = await passengers.findById(id)
-        res.status(200).json(UpdatedPassenger)
-    } catch (error) {
-        res.status(500).json({ message: error.message })
-    }
-})
-
-//Delete for passengers
-app.delete('/passengers/:id', async (req, res) => {
-    try {
-        const { id } = req.params;
-        const Passenger = await passengers.findByIdAndDelete(id);
-        if (!Passenger) {
-            return res.status(404).json({ message: 'Cannot find this passenger with ID ${id}' })
-        }
-        res.status(200).json(Passenger)
     } catch (error) {
         res.status(500).json({ message: error.message })
     }

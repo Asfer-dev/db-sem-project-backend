@@ -1,17 +1,23 @@
-const userSchema = mongoose.Schema(
+import mongoose from "mongoose";
+
+const usersSchema = mongoose.Schema(
   {
-    email: {
+    cnic: {
       type: String,
-      required: [true, "Please enter email"],
+      required: [true, "Please enter your CNIC"],
     },
-    password: {
+    name: {
       type: String,
-      required: [true, "Password is required"],
+      required: [true],
     },
-    passenger: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "passengers",
-      required: true,
+    contact_no: {
+      type: String,
+      required: [true],
+    },
+    gender: {
+      type: String,
+      required: [true],
+      maxlength: 1,
     },
   },
   {
@@ -19,4 +25,4 @@ const userSchema = mongoose.Schema(
   }
 );
 
-export const users = mongoose.model("users", userSchema);
+export const users = mongoose.model("users", usersSchema);
