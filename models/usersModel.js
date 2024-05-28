@@ -22,6 +22,7 @@ const usersSchema = mongoose.Schema(
   },
   {
     timestamps: true,
+    strictPopulate: false,
   }
 );
 

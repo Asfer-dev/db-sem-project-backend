@@ -18,6 +18,7 @@ const credentialsSchema = mongoose.Schema(
   },
   {
     timestamps: true,
+    strictPopulate: false,
   }
 );
 
