@@ -13,7 +13,7 @@ const busesSchema = mongoose.Schema({
   type: {
     type: String,
     required: true,
-    enum: ["STANDARD", "EXECUTIVE", "BUSINESS"],
+    enum: ["BASIC", "EXECUTIVE", "BUSINESS"],
   },
   addedFare: {
     type: Number,

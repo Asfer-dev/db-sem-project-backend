@@ -7,6 +7,8 @@ import { routes } from "./models/routesModel.js";
 import { configDotenv } from "dotenv";
 import cors from "cors";
 import { buses } from "./models/busesModel.js";
+import { tickets } from "./models/ticketsModel.js";
+// import { ObjectId } from "mongodb";
 //const bcrypt = require('bcrypt')
 
 configDotenv();
@@ -42,7 +44,6 @@ app.post("/signup", async (req, res) => {
 
 // Loging in user
 app.get("/login", async (req, res) => {
-  console.log(req.query);
   try {
     const Credential = await credentials
       .findOne({ email: req.query.email })
@@ -124,6 +125,16 @@ app.delete("/terminals/:id", async (req, res) => {
   }
 });
 
+// ROUTES ROUTES
+app.get("/routes", async (req, res) => {
+  try {
+    const Routes = await routes.find({});
+    res.status(200).json(Routes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
 const busTypes = {
   level0: "BASIC",
   level1: "EXECUTIVE",
@@ -154,8 +165,97 @@ app.post("/buses", async (req, res) => {
 
 app.get("/buses", async (req, res) => {
   try {
-    const Buses = await buses.find({});
+    const Buses = await buses
+      .find({})
+      .populate([{ path: "route", strictPopulate: false }]);
     return res.json(Buses);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get("/buses/:bus_id", async (req, res) => {
+  try {
+    const Bus = await buses
+      .findById(req.params.bus_id)
+      .populate([{ path: "route", strictPopulate: false }]);
+    return res.json(Bus);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// TICKETS ROUTES
+app.post("/tickets", async (req, res) => {
+  try {
+    const { bus_id, user_id, passengerData, seat_no } = req.body;
+    let passenger = null;
+    const user = await users.findById(user_id);
+    if (passengerData.user_id) {
+      passenger = await users.findById(passengerData.user_id);
+    } else {
+      passenger = await users.create({
+        name: passengerData.name,
+        cnic: passengerData.cnic,
+        contact_no: passengerData.contact_no,
+        gender: passengerData.gender,
+      });
+    }
+    const bus = await buses.findById(bus_id);
+    const Ticket = await tickets.create({ bus, user, passenger, seat_no });
+    res.json(Ticket);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get("/tickets", async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    const Tickets = await tickets
+      .find({ user: user_id })
+      .populate([{ path: "passenger", strictPopulate: false }])
+      .populate([
+        {
+          path: "bus",
+          populate: {
+            path: "route",
+            populate: [
+              { path: "departure_terminal" },
+              { path: "destination_terminal" },
+            ],
+          },
+          strictPopulate: false,
+        },
+      ]);
+    res.json(Tickets);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.get("/tickets/:bus_id", async (req, res) => {
+  try {
+    const bus_id = req.params.bus_id;
+    const Tickets = await tickets
+      .find({ bus: bus_id })
+      .populate([{ path: "passenger", strictPopulate: false }]);
+    res.json(Tickets);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+app.delete("/tickets/:id", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const Ticket = await tickets.findByIdAndDelete(id);
+    if (!Ticket) {
+      return res
+        .status(404)
+        .json({ message: `Cannot find this ticket with ID ${id}` });
+    }
+    res.status(200).json(Ticket);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

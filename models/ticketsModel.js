@@ -6,6 +6,11 @@ const ticketsSchema = mongoose.Schema({
     ref: "buses",
     required: [true],
   },
+  user: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "users",
+    required: [true],
+  },
   passenger: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "users",
