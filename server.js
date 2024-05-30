@@ -125,11 +125,45 @@ app.delete("/terminals/:id", async (req, res) => {
   }
 });
 
+function parseNonNegativeNumber(str) {
+  // Try to parse the string as a number
+  const number = parseFloat(str);
+
+  // Check if the parsed number is a valid number and is non-negative
+  if (isNaN(number) || number < 0) {
+    throw new Error("Invalid or negative number");
+  }
+
+  return number;
+}
+
 // ROUTES ROUTES
 app.get("/routes", async (req, res) => {
   try {
     const Routes = await routes.find({});
     res.status(200).json(Routes);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+app.post("/routes", async (req, res) => {
+  try {
+    const {
+      departure_terminal_id,
+      destination_terminal_id,
+      fare: fareStr,
+    } = req.body;
+    const departure_terminal = await terminals.findById(departure_terminal_id);
+    const destination_terminal = await terminals.findById(
+      destination_terminal_id
+    );
+    const fare = parseNonNegativeNumber(fareStr);
+    const Route = await routes.create({
+      departure_terminal,
+      destination_terminal,
+      fare,
+    });
+    res.status(200).json(Route);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
